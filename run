@@ -1,0 +1,3 @@
+#!/bin/bash
+service nginx start
+plackup -p 5555 /app/manager

@@ -1,0 +1,72 @@
+use strict;
+use utf8;
+use Plack::Builder;
+use Plack::Request;
+use Plack::App::Proxy;
+use Proc::Simple;
+use Furl;
+
+my $html = do {local $/; <DATA>};
+my $furl = Furl->new(agent => 'docker-revealup/latest', timeout => 60);
+my $proc;
+
+sub manager {
+    my ($env) = @_;
+    my $req = Plack::Request->new($env);
+
+    my $slide = $proc ? '<a href="/">HERE</a> <a href="/manager/revealup_stop">(stop)</a>' : 'none';
+
+    return [200, ['Content-Type' => 'text/html;charset=utf-8'], [$html =~ s/_SLIDE_/$slide/r]];
+};
+
+sub revealup {
+    my ($env) = @_;
+    my $req = Plack::Request->new($env);
+
+    my $url = $req->param('url');
+
+    my $res = $furl->get($url);
+
+    if ($res->is_success) {
+        open my $fh, '>', '/app/doc.md' or die $!;
+        print $fh $res->content;
+        close $fh;
+    }
+
+    revealup_stop();
+
+    $proc = Proc::Simple->new();
+    $proc->start(qw[revealup serve /app/doc.md]);
+    [302, ['Location' => '/manager/'], []];
+}
+
+sub revealup_stop {
+    if ($proc) {
+        $proc->kill;
+        $proc->poll;
+        $proc = undef;
+    }
+    [302, ['Location' => '/manager/'], []];
+}
+
+sub {
+    my ($env) = @_;
+    my $path = $env->{PATH_INFO};
+    $path eq '/manager/revealup'      ? do { revealup($env) } :
+    $path eq '/manager/revealup_stop' ? do { revealup_stop($env) } :
+    $path =~ m|/manager/?|            ? do { manager($env) } :
+    [404, ['Content-Type' => 'text/html;charset=utf-8'], ['<h1>Not Found</h1>']] ;
+};
+
+__DATA__
+<html>
+<title>revealup manager</title>
+<body>
+<h1>revealup manager</h1>
+<p>CURRENT SLIDE: _SLIDE_</p>
+<form action="/manager/revealup" method="post">
+<p>markdown url: <input type="text" name="url"></p>
+<p><input type="submit" value="BootUP/Change">
+</form>
+</body>
+</html>
