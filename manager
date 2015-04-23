@@ -10,6 +10,10 @@ my $html = do {local $/; <DATA>};
 my $furl = Furl->new(agent => 'docker-revealup/latest', timeout => 60);
 my $proc;
 
+### fetch and revealup default slide
+my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
+_revealup($default_slide_url);
+
 sub manager {
     my ($env) = @_;
     my $req = Plack::Request->new($env);
@@ -25,18 +29,10 @@ sub revealup {
 
     my $url = $req->param('url');
 
-    my $res = $furl->get($url);
-
-    if ($res->is_success) {
-        open my $fh, '>', '/app/doc.md' or die $!;
-        print $fh $res->content;
-        close $fh;
-    }
-
     revealup_stop();
 
-    $proc = Proc::Simple->new();
-    $proc->start(qw[revealup serve /app/doc.md]);
+    _revealup($url);
+
     [302, ['Location' => '/manager/'], []];
 }
 
@@ -47,6 +43,20 @@ sub revealup_stop {
         $proc = undef;
     }
     [302, ['Location' => '/manager/'], []];
+}
+
+sub _revealup {
+    my ($url) = @_;
+    my $res = $furl->get($url);
+
+    if ($res->is_success) {
+        open my $fh, '>', '/app/doc.md' or die $!;
+        print $fh $res->content;
+        close $fh;
+    }
+
+    $proc = Proc::Simple->new();
+    $proc->start(qw[revealup serve /app/doc.md]);
 }
 
 sub {
