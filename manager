@@ -29,10 +29,12 @@ sub revealup {
     my $req = Plack::Request->new($env);
 
     my $url = $req->param('url');
+    my $theme = $req->param('theme');
+    my $transition = $req->param('transition');
 
     if ($url) {
         revealup_stop();
-        _revealup($url);
+        _revealup($url, $theme, $transition);
     }
 
     [302, ['Location' => '/manager/'], []];
@@ -47,7 +49,7 @@ sub revealup_stop {
 }
 
 sub _revealup {
-    my ($url) = @_;
+    my ($url, $theme, $transition) = @_;
     my $res = $furl->get($url);
 
     if ($res->is_success) {
@@ -58,7 +60,7 @@ sub _revealup {
 
     $current_url = $url;
     $proc = Proc::Simple->new();
-    $proc->start(qw[revealup serve /app/doc.md]);
+    $proc->start(qw[revealup serve /app/doc.md --theme "$theme" --transition "$transition"]);
 }
 
 sub {
@@ -74,6 +76,10 @@ __DATA__
 
 <head>
 <title>revealup manager</title>
+
+
+<!-- jquery google cdn -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -110,6 +116,33 @@ __DATA__
           <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
           <span class="input-group-btn"><input class="btn btn-info" type="submit" value="Change"></span>
         </div>
+	<div class="form-group form-group-lg">
+	<label class="">theme</label>
+	  <select class="" name="theme" >
+	    <option value="default.css">default</option>
+	    <option value="beige.css">beige</option>
+	    <option value="blood.css">blood</option>
+	    <option value="moon.css">moon</option>
+	    <option value="night.css">night</option>
+	    <option value="serif.css">serif</option>
+	    <option value="simple.css">simple</option>
+	    <option value="sky.css">sky</option>
+	    <option value="solarized.css">solarized</option>
+	  </select>
+	</div>
+	<div class="form-group form-group-lg">
+        <label class="">transition</label>                                                                                      
+          <select class="" name="transition" >                                                                                  
+            <option value="default">default</option>                                                                   
+            <option value="cube">cube</option>                                                                       
+            <option value="page">page</option>                                                                       
+            <option value="concave">concave</option>                                                                         
+            <option value="zoom">zoom</option>                                                                       
+            <option value="linear">linear</option>                                                                       
+            <option value="fade">fade</option>                                                                     
+            <option value="none">none</option>                                                                           
+          </select>                                                                                                        
+        </div>   
       </form>
     </div>
   </div>
