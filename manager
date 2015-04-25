@@ -85,8 +85,9 @@ __DATA__
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- jquery google cdn -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<!-- jquery google cdn -->                           
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>  
+
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -94,8 +95,8 @@ __DATA__
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->                                                              
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>   
 
 </head>
 
@@ -168,8 +169,8 @@ __DATA__
   </form>
 
   <div class="row">
-    <div class="col-lg-12">
-      <button class="btn btn-large btn-success" onclick="location.href='/';">Slideshow</button>
+    <div class="center-block">
+      <button class="btn btn-lg btn-block btn-success" onclick="location.href='/';">show Up!</button>
     </div>
   </div>
 </div>
