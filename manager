@@ -10,6 +10,9 @@ my $html = do {local $/; <DATA>};
 my $furl = Furl->new(agent => 'docker-revealup/latest', timeout => 60);
 my $proc;
 my $current_url;
+my $current_theme = 'default.css';
+my $current_trans = 'default';
+
 
 ### fetch and revealup default slide
 my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
@@ -29,10 +32,12 @@ sub revealup {
     my $req = Plack::Request->new($env);
 
     my $url = $req->param('url');
+    my $theme = $req->param('theme');
+    my $trans = $req->param('transition');
 
     if ($url) {
         revealup_stop();
-        _revealup($url);
+        _revealup($url, $theme, $trans);
     }
 
     [302, ['Location' => '/manager/'], []];
@@ -47,7 +52,7 @@ sub revealup_stop {
 }
 
 sub _revealup {
-    my ($url) = @_;
+    my ($url, $theme, $trans) = @_;
     my $res = $furl->get($url);
 
     if ($res->is_success) {
@@ -57,8 +62,10 @@ sub _revealup {
     }
 
     $current_url = $url;
+    $current_theme = $theme ? $theme : $current_theme;
+    $current_trans = $trans ? $trans : $current_trans;
     $proc = Proc::Simple->new();
-    $proc->start(qw[revealup serve /app/doc.md]);
+    $proc->start(qq[revealup serve /app/doc.md --theme $current_theme --transition $current_trans]);
 }
 
 sub {
@@ -74,6 +81,13 @@ __DATA__
 
 <head>
 <title>revealup manager</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- jquery google cdn -->                           
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>  
+
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
@@ -81,8 +95,8 @@ __DATA__
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->                                                              
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>   
 
 </head>
 
@@ -102,20 +116,61 @@ __DATA__
 </div>
 
 <div class="container">
-  <div class="row">
-    <div class="col-lg-12">
-      <form action="/manager/revealup" method="post">
+  <form action="/manager/revealup" method="post">
+
+    <div class="row">
+      <div class="col-lg-12">
         <div class="input-group input-group-lg">
           <span class="input-group-addon">markdown URL</span>
           <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
           <span class="input-group-btn"><input class="btn btn-info" type="submit" value="Change"></span>
         </div>
-      </form>
-    </div>
-  </div>
+      </div>
+     </div>
+
+     <div class="row">
+       <div class="col-lg-12">
+         <div class="form-group">
+	   <label class="control-label" for="theme">theme</label>
+	   <select class="form-control input-lg" name="theme" >
+	     <option value="default.css">default</option>
+	     <option value="beige.css">beige</option>
+	     <option value="blood.css">blood</option>
+	     <option value="moon.css">moon</option>
+	     <option value="night.css">night</option>
+	     <option value="serif.css">serif</option>
+	     <option value="simple.css">simple</option>
+	     <option value="sky.css">sky</option>
+	     <option value="solarized.css">solarized</option>
+	   </select>
+	 </div>
+       </div>
+     </div>
+
+
+     <div class="row">
+       <div class="col-lg-12">
+	 <div class="form-group">
+           <label class="control-label" for="transition">transition</label>                                                                                      
+           <select class="form-control input-lg" name="transition" >                                                                                  
+             <option value="default">default</option>                                                                   
+             <option value="cube">cube</option>                                                                       
+             <option value="page">page</option>                                                                       
+             <option value="concave">concave</option>                                                                         
+             <option value="zoom">zoom</option>                                                                       
+             <option value="linear">linear</option>                                                                       
+             <option value="fade">fade</option>                                                                     
+             <option value="none">none</option>                                                                           
+           </select>                                                                                                        
+         </div>   
+       </div>
+     </div>
+
+  </form>
+
   <div class="row">
-    <div class="col-lg-12">
-      <button class="btn btn-large btn-success" onclick="location.href='/';">Slideshow</button>
+    <div class="center-block">
+      <button class="btn btn-lg btn-block btn-success" onclick="location.href='/';">show Up!</button>
     </div>
   </div>
 </div>
