@@ -13,6 +13,7 @@ my $proc;
 my $current_url;
 my $current_theme = 'default.css';
 my $current_trans = 'default';
+my $current_size = '960x700';
 
 ### fetch and revealup default slide
 my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
@@ -28,6 +29,7 @@ sub manager {
         transition => $current_trans,
         theme      => $current_theme,
         url        => $current_url,
+        size       => $current_size,
     };
 
     return [200, ['Content-Type' => 'text/html;charset=utf-8'], [HTML::FillInForm->fill(\$output, $fillin_data)]];
@@ -40,10 +42,11 @@ sub revealup {
     my $url = $req->param('url');
     my $theme = $req->param('theme');
     my $trans = $req->param('transition');
+    my $size = $req->param('size');
 
     if ($url) {
         revealup_stop();
-        _revealup($url, $theme, $trans);
+        _revealup($url, $theme, $trans, $size);
     }
 
     [302, ['Location' => '/manager/'], []];
@@ -58,7 +61,7 @@ sub revealup_stop {
 }
 
 sub _revealup {
-    my ($url, $theme, $trans) = @_;
+    my ($url, $theme, $trans, $size) = @_;
     my $res = $furl->get($url);
 
     if ($res->is_success) {
@@ -70,8 +73,12 @@ sub _revealup {
     $current_url = $url;
     $current_theme = $theme ? $theme : $current_theme;
     $current_trans = $trans ? $trans : $current_trans;
+    $current_size  = $size  ? $size  : $current_size ;
+
+    my ($width, $height) = $current_size =~ /^([0-9]+)x([0-9]+)$/ ? ($1, $2) : (960, 700);
+    
     $proc = Proc::Simple->new();
-    $proc->start(qq[revealup serve /app/doc.md --theme $current_theme --transition $current_trans]);
+    $proc->start(qq[revealup serve /app/doc.md --theme $current_theme --transition $current_trans --width $width --height $height]);
 }
 
 sub {
@@ -132,45 +139,62 @@ __DATA__
           <span class="input-group-btn"><input class="btn btn-info" type="submit" value="Change"></span>
         </div>
       </div>
-     </div>
+    </div>
 
-     <div class="row">
-       <div class="col-lg-12">
-         <div class="form-group">
-	   <label class="control-label" for="theme">theme</label>
-	   <select class="form-control input-lg" name="theme" >
-	     <option value="default.css">default</option>
-	     <option value="beige.css">beige</option>
-	     <option value="blood.css">blood</option>
-	     <option value="moon.css">moon</option>
-	     <option value="night.css">night</option>
-	     <option value="serif.css">serif</option>
-	     <option value="simple.css">simple</option>
-	     <option value="sky.css">sky</option>
-	     <option value="solarized.css">solarized</option>
-	   </select>
-	 </div>
-       </div>
-     </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="form-group">
+          <label class="control-label" for="theme">theme</label>
+          <select class="form-control input-lg" name="theme" >
+            <option value="default.css">default</option>
+            <option value="beige.css">beige</option>
+            <option value="blood.css">blood</option>
+            <option value="moon.css">moon</option>
+            <option value="night.css">night</option>
+            <option value="serif.css">serif</option>
+            <option value="simple.css">simple</option>
+            <option value="sky.css">sky</option>
+            <option value="solarized.css">solarized</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="form-group">
+          <label class="control-label" for="transition">transition</label>                                                                                      
+          <select class="form-control input-lg" name="transition" >                                                                                  
+            <option value="default">default</option>                                                                   
+            <option value="cube">cube</option>                                                                       
+            <option value="page">page</option>                                                                       
+            <option value="concave">concave</option>                                                                         
+            <option value="zoom">zoom</option>                                                                       
+            <option value="linear">linear</option>                                                                       
+            <option value="fade">fade</option>                                                                     
+            <option value="none">none</option>                                                                           
+          </select>                                                                                                        
+        </div>   
+      </div>
+    </div>
 
-     <div class="row">
-       <div class="col-lg-12">
-	 <div class="form-group">
-           <label class="control-label" for="transition">transition</label>                                                                                      
-           <select class="form-control input-lg" name="transition" >                                                                                  
-             <option value="default">default</option>                                                                   
-             <option value="cube">cube</option>                                                                       
-             <option value="page">page</option>                                                                       
-             <option value="concave">concave</option>                                                                         
-             <option value="zoom">zoom</option>                                                                       
-             <option value="linear">linear</option>                                                                       
-             <option value="fade">fade</option>                                                                     
-             <option value="none">none</option>                                                                           
-           </select>                                                                                                        
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="form-group">
+          <label class="control-label" for="transition">size</label>                                                                                      
+           <select class="form-control input-lg" name="size">
+             <option value="960x700">960x700</option>
+             <option value="640x480">640x480</option>
+             <option value="1024x768">1024x768</option>
+             <option value="1280x800">1280x800</option>
+             <option value="1440x900">1440x900</option>
+             <option value="1680x1050">1680x1050</option>
+             <option value="1920x1080">1920x1080</option>
+             <option value="2560x1600">2560x1600</option>
+           </select>
          </div>   
-       </div>
-     </div>
+      </div>
+    </div>
 
   </form>
 
