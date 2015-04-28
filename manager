@@ -4,12 +4,15 @@ use Plack::Builder;
 use Plack::Request;
 use Plack::App::Proxy;
 use Proc::Simple;
+use HTML::FillInForm;
 use Furl;
 
 my $html = do {local $/; <DATA>};
 my $furl = Furl->new(agent => 'docker-revealup/latest', timeout => 60);
 my $proc;
 my $current_url;
+my %opts;
+my $in_params;
 
 ### fetch and revealup default slide
 my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
@@ -20,19 +23,38 @@ sub manager {
     my $req = Plack::Request->new($env);
 
     my $slide = $proc ? '<a href="'.$current_url.'" target="_blank"><span class="label label-info">CURRENT</span> '.$current_url.'</a>' : 'none';
+    my $output = $html =~ s/_SLIDE_/$slide/r;
 
-    return [200, ['Content-Type' => 'text/html;charset=utf-8'], [$html =~ s/_SLIDE_/$slide/r]];
+    return [200, ['Content-Type' => 'text/html;charset=utf-8'], [HTML::FillInForm->fill(\$output, $in_params)]];
 };
 
 sub revealup {
     my ($env) = @_;
     my $req = Plack::Request->new($env);
 
-    my $url = $req->param('url');
+    my $url        = $req->param('url');
+    my $size       = $req->param('size');
+    my $theme      = $req->param('theme');
+    my $transition = $req->param('transition');
+
+    $in_params = {
+        url        => $url,
+        size       => $size,
+        theme      => $theme,
+        transition => $transition,
+    };
+
+    my ($width, $height) = $size ? $size =~ /^([0-9]+)x([0-9]+)$/ : (960, 700) ;
+    %opts = (
+        '--theme'      => $theme,
+        '--transition' => $transition,
+        '--width'      => $width,
+        '--height'     => $height,
+    );
 
     if ($url) {
         revealup_stop();
-        _revealup($url);
+        _revealup($url, %opts);
     }
 
     [302, ['Location' => '/manager/'], []];
@@ -47,7 +69,7 @@ sub revealup_stop {
 }
 
 sub _revealup {
-    my ($url) = @_;
+    my ($url, %opts) = @_;
     my $res = $furl->get($url);
 
     if ($res->is_success) {
@@ -56,11 +78,17 @@ sub _revealup {
         close $fh;
     }
 
+    $opts{'--theme'}      ||= 'default.css';
+    $opts{'--transition'} ||= 'default';
+    $opts{'--width'}      ||= 960;
+    $opts{'--height'}     ||= 700;
+
     $current_url = $url;
     $proc = Proc::Simple->new();
-    $proc->start(qw[revealup serve /app/doc.md]);
+    $proc->start(qw[revealup serve], %opts, '/app/doc.md');
 }
 
+### PSGI app
 sub {
     my ($env) = @_;
     my $path = $env->{PATH_INFO};
@@ -105,6 +133,46 @@ __DATA__
   <div class="row">
     <div class="col-lg-12">
       <form action="/manager/revealup" method="post">
+        <div class="input-group input-group-lg">
+          <span class="input-group-addon">Theme</span>
+          <select class="form-control" name="theme">
+            <option value="default.css">Default</option>
+            <option value="beige.css">Beige</option>
+            <option value="blood.css">Blood</option>
+            <option value="moon.css">Moon</option>
+            <option value="night.css">Night</option>
+            <option value="serif.css">Serif</option>
+            <option value="simple.css">Simple</option>
+            <option value="sky.css">Sky</option>
+            <option value="solarized.css">Solarized</option>
+          </select>
+        </div>
+        <div class="input-group input-group-lg">
+          <span class="input-group-addon">Transition</span>
+          <select class="form-control" name="transition">
+            <option value="default">Default</option>
+            <option value="cube">Cube</option>
+            <option value="page">Page</option>
+            <option value="concave">Concave</option>
+            <option value="zoom">Zoom</option>
+            <option value="linear">Linear</option>
+            <option value="fade">Fade</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <div class="input-group input-group-lg">
+          <span class="input-group-addon">Size</span>
+          <select class="form-control" name="size">
+            <option value="960x700">960x700</option>
+            <option value="640x480">640x480</option>
+            <option value="1024x768">1024x768</option>
+            <option value="1280x800">1280x800</option>
+            <option value="1440x900">1440x900</option>
+            <option value="1680x1050">1680x1050</option>
+            <option value="1920x1080">1920x1080</option>
+            <option value="2560x1600">2560x1600</option>
+          </select>
+        </div>
         <div class="input-group input-group-lg">
           <span class="input-group-addon">markdown URL</span>
           <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
