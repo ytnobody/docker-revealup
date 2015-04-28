@@ -5,7 +5,7 @@ ENV MANAGER_PORT 5555
 
 RUN apt-get update
 RUN apt-get install -y nginx
-RUN cpanm -n App::revealup Proc::Simple Furl Plack::App::Proxy HTML::FillInForm
+RUN cpanm -n App::revealup Proc::Simple Furl Plack::App::Proxy 
 
 RUN mkdir /app
 ADD manager /app/manager
