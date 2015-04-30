@@ -13,6 +13,7 @@ my $proc;
 my $current_url;
 my %opts;
 my $in_params;
+my $doc = '/app/doc.md';
 
 ### fetch and revealup default slide
 my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
@@ -72,7 +73,7 @@ sub _revealup {
     my $res = $furl->get($url);
 
     if ($res->is_success) {
-        open my $fh, '>', '/app/doc.md' or die $!;
+        open my $fh, '>', $doc or die $!;
         print $fh $res->content;
         close $fh;
     }
@@ -83,7 +84,7 @@ sub _revealup {
     $opts{'--height'}     ||= 700;
     
     $proc = Proc::Simple->new();
-    $proc->start(qw[revealup serve], %opts, '/app/doc.md');
+    $proc->start(qw[revealup serve], %opts, $doc);
 }
 
 ### PSGI app
@@ -124,7 +125,7 @@ __DATA__
 <div class="navbar navbar-inverse" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <a class="navbar-brand" href="/manager">revealup manager</a>
+      <a class="navbar-brand" href="/manager">revealup</a>
     </div>
     <div class="collapse navbar-collapse navbar-ex1-collapse">
       <ul class="nav navbar-nav navbar-right">
