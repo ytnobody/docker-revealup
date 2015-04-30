@@ -81,7 +81,6 @@ sub _revealup {
     $opts{'--transition'} ||= 'default';
     $opts{'--width'}      ||= 960;
     $opts{'--height'}     ||= 700;
-    my ($width, $height) = $current_size =~ /^([0-9]+)x([0-9]+)$/ ? ($1, $2) : (960, 700);
     
     $proc = Proc::Simple->new();
     $proc->start(qw[revealup serve], %opts, '/app/doc.md');
@@ -137,49 +136,65 @@ __DATA__
 
 <div class="container">
   <form action="/manager/revealup" method="post">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="form-group">
+          <label class="control-label" for="theme">theme</label>
+          <select class="form-control input-lg" name="theme" >
+            <option value="default.css">default</option>
+            <option value="beige.css">beige</option>
+            <option value="blood.css">blood</option>
+            <option value="moon.css">moon</option>
+            <option value="night.css">night</option>
+            <option value="serif.css">serif</option>
+            <option value="simple.css">simple</option>
+            <option value="sky.css">sky</option>
+            <option value="solarized.css">solarized</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="col-lg-12">
-        <div class="input-group input-group-lg">
-          <span class="input-group-addon">Theme</span>
-          <select class="form-control" name="theme">
-            <option value="default.css">Default</option>
-            <option value="beige.css">Beige</option>
-            <option value="blood.css">Blood</option>
-            <option value="moon.css">Moon</option>
-            <option value="night.css">Night</option>
-            <option value="serif.css">Serif</option>
-            <option value="simple.css">Simple</option>
-            <option value="sky.css">Sky</option>
-            <option value="solarized.css">Solarized</option>
-          </select>
-        </div>
-        <div class="input-group input-group-lg">
-          <span class="input-group-addon">Transition</span>
-          <select class="form-control" name="transition">
-            <option value="default">Default</option>
-            <option value="cube">Cube</option>
-            <option value="page">Page</option>
-            <option value="concave">Concave</option>
-            <option value="zoom">Zoom</option>
-            <option value="linear">Linear</option>
-            <option value="fade">Fade</option>
-            <option value="none">None</option>
-          </select>
-        </div>
-        <div class="input-group input-group-lg">
-          <span class="input-group-addon">Size</span>
-          <select class="form-control" name="size">
-            <option value="960x700">960x700</option>
-            <option value="640x480">640x480</option>
-            <option value="1024x768">1024x768</option>
-            <option value="1280x800">1280x800</option>
-            <option value="1440x900">1440x900</option>
-            <option value="1680x1050">1680x1050</option>
-            <option value="1920x1080">1920x1080</option>
-            <option value="2560x1600">2560x1600</option>
-          </select>
-        </div>
+        <div class="form-group">
+          <label class="control-label" for="transition">transition</label>                                                                                      
+          <select class="form-control input-lg" name="transition" >                                                                                  
+            <option value="default">default</option>                                                                   
+            <option value="cube">cube</option>                                                                       
+            <option value="page">page</option>                                                                       
+            <option value="concave">concave</option>                                                                         
+            <option value="zoom">zoom</option>                                                                       
+            <option value="linear">linear</option>                                                                       
+            <option value="fade">fade</option>                                                                     
+            <option value="none">none</option>                                                                           
+          </select>                                                                                                        
+        </div>   
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="form-group">
+          <label class="control-label" for="transition">size</label>                                                                                      
+           <select class="form-control input-lg" name="size">
+             <option value="960x700">960x700</option>
+             <option value="640x480">640x480</option>
+             <option value="1024x768">1024x768</option>
+             <option value="1280x800">1280x800</option>
+             <option value="1440x900">1440x900</option>
+             <option value="1680x1050">1680x1050</option>
+             <option value="1920x1080">1920x1080</option>
+             <option value="2560x1600">2560x1600</option>
+           </select>
+         </div>   
+      </div>
+    </div>
+
+
+
+    <div class="row">
+      <div class="col-lg-12">
         <div class="input-group input-group-lg">
           <span class="input-group-addon">markdown URL</span>
           <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
@@ -187,6 +202,7 @@ __DATA__
         </div>
       </div>
     </div>
+
   </form>
 
   <div class="row">
