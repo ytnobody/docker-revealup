@@ -69,7 +69,6 @@ sub revealup_stop {
 
 sub _revealup {
     my ($url, %opts) = @_;
->>>>>>> dfbdfc8... theme/transition/size specifier
     my $res = $furl->get($url);
 
     if ($res->is_success) {
