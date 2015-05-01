@@ -79,6 +79,7 @@ sub _revealup {
         close $fh;
     }
 
+    $current_url = $url;
     $opts{'--theme'}      ||= 'default.css';
     $opts{'--transition'} ||= 'default';
     $opts{'--width'}      ||= 960;
@@ -215,35 +216,6 @@ __DATA__
 </div>
 
 
-
-
-<script>                                                                                                                                         
-$(document).ready(function() {                                                                                                                   
-   var data = {                                                                                                                                  
-       url: $(#url).value(),                                                                                                                     
-       theme: $(#theme).value(),                                                          
-       trasnsition: $(#transition).value(),                                                                                                      
-       size: $(size).value()  };                                                                                  
-   var update = $ajax({                                                                                                                          
-      type:"POST",                                                                                                                               
-      url:"/manager/revealup",                                                                                                                   
-      data: data,                                                                                                                            
-   });                                                                                                                                       
-                                                                                                                                                 
-                                                                    
-   update                                                                                                                                        
-   .ajaxstart() // loading start                                                                                                             
-   .ajaxsend() // server send                                                                                     
-   .ajaxSuccess() // success handling                                                                                                            
-   .ajaxError() // error handling                                                                                                                
-   .ajaxStop() // loading finish                                                                                                                 
-   .ajaxComplete() // finish                                                                            
-   ;                                                                                                                                             
-                                                                                                                                                 
-});                                                                                                                                 
-                                                                                                                                    
-                                                                                                                                    
-</scirpt>
 
 
 </body>
