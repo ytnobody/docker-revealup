@@ -11,9 +11,10 @@ my $html = do {local $/; <DATA>};
 my $furl = Furl->new(agent => 'docker-revealup/latest', timeout => 60);
 my $proc;
 my $current_url;
-my $current_theme = 'default.css';
-my $current_trans = 'default';
-my $current_size = '960x700';
+my %opts;
+my $in_params;
+my $doc = '/app/doc.md';
+
 
 ### fetch and revealup default slide
 my $default_slide_url = $ENV{DEFAULT_SLIDE_URL} || 'https://gist.githubusercontent.com/ytnobody/5062caf5275a0825ade3/raw/docker-revealup.md';
@@ -25,28 +26,36 @@ sub manager {
 
     my $slide = $proc ? '<a href="'.$current_url.'" target="_blank"><span class="label label-info">CURRENT</span> '.$current_url.'</a>' : 'none';
     my $output = $html =~ s/_SLIDE_/$slide/r;
-    my $fillin_data = {
-        transition => $current_trans,
-        theme      => $current_theme,
-        url        => $current_url,
-        size       => $current_size,
-    };
-
-    return [200, ['Content-Type' => 'text/html;charset=utf-8'], [HTML::FillInForm->fill(\$output, $fillin_data)]];
+    return [200, ['Content-Type' => 'text/html;charset=utf-8'], [HTML::FillInForm->fill(\$output, $in_params)]];
 };
 
 sub revealup {
     my ($env) = @_;
     my $req = Plack::Request->new($env);
 
-    my $url = $req->param('url');
-    my $theme = $req->param('theme');
-    my $trans = $req->param('transition');
-    my $size = $req->param('size');
+    my $url        = $req->param('url');
+    my $size       = $req->param('size');
+    my $theme      = $req->param('theme');
+    my $transition = $req->param('transition');
+
+    $in_params = {
+        url        => $url,
+        size       => $size,
+        theme      => $theme,
+        transition => $transition,
+    };
+
+    my ($width, $height) = $size ? $size =~ /^([0-9]+)x([0-9]+)$/ : (960, 700) ;
+    %opts = (
+        '--theme'      => $theme,
+        '--transition' => $transition,
+        '--width'      => $width,
+        '--height'     => $height,
+    );
 
     if ($url) {
         revealup_stop();
-        _revealup($url, $theme, $trans, $size);
+        _revealup($url, %opts);
     }
 
     [302, ['Location' => '/manager/'], []];
@@ -61,26 +70,26 @@ sub revealup_stop {
 }
 
 sub _revealup {
-    my ($url, $theme, $trans, $size) = @_;
+    my ($url, %opts) = @_;
     my $res = $furl->get($url);
 
     if ($res->is_success) {
-        open my $fh, '>', '/app/doc.md' or die $!;
+        open my $fh, '>', $doc or die $!;
         print $fh $res->content;
         close $fh;
     }
 
     $current_url = $url;
-    $current_theme = $theme ? $theme : $current_theme;
-    $current_trans = $trans ? $trans : $current_trans;
-    $current_size  = $size  ? $size  : $current_size ;
-
-    my ($width, $height) = $current_size =~ /^([0-9]+)x([0-9]+)$/ ? ($1, $2) : (960, 700);
+    $opts{'--theme'}      ||= 'default.css';
+    $opts{'--transition'} ||= 'default';
+    $opts{'--width'}      ||= 960;
+    $opts{'--height'}     ||= 700;
     
     $proc = Proc::Simple->new();
-    $proc->start(qq[revealup serve /app/doc.md --theme $current_theme --transition $current_trans --width $width --height $height]);
+    $proc->start(qw[revealup serve], %opts, $doc);
 }
 
+### PSGI app
 sub {
     my ($env) = @_;
     my $path = $env->{PATH_INFO};
@@ -118,7 +127,7 @@ __DATA__
 <div class="navbar navbar-inverse" role="navigation">
   <div class="container">
     <div class="navbar-header">
-      <a class="navbar-brand" href="/manager">revealup manager</a>
+      <a class="navbar-brand" href="/manager">revealup</a>
     </div>
     <div class="collapse navbar-collapse navbar-ex1-collapse">
       <ul class="nav navbar-nav navbar-right">
@@ -130,17 +139,6 @@ __DATA__
 
 <div class="container">
   <form action="/manager/revealup" method="post">
-
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="input-group input-group-lg">
-          <span class="input-group-addon">markdown URL</span>
-          <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
-          <span class="input-group-btn"><input class="btn btn-info" type="submit" value="Change"></span>
-        </div>
-      </div>
-    </div>
-
     <div class="row">
       <div class="col-lg-12">
         <div class="form-group">
@@ -196,6 +194,18 @@ __DATA__
       </div>
     </div>
 
+
+
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="input-group input-group-lg">
+          <span class="input-group-addon">markdown URL</span>
+          <input class="form-control" type="url" name="url" placeholder="http://example.com/path/to/slide.md">
+          <span class="input-group-btn"><input class="btn btn-info" type="submit" value="Change"></span>
+        </div>
+      </div>
+    </div>
+
   </form>
 
   <div class="row">
@@ -204,6 +214,9 @@ __DATA__
     </div>
   </div>
 </div>
+
+
+
 
 </body>
 
