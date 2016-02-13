@@ -1,4 +1,4 @@
-FROM ytnobody/debian-plack
+FROM ytnobody/base:wheezy
 MAINTAINER ytnobody@gmail.com
 
 ENV MANAGER_PORT 5555
